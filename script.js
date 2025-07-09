@@ -2,6 +2,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // This ensures the DOM is fully loaded before trying to access elements
     console.log('script.js loaded and DOM is ready!');
 
+    const defaultActiveButton = document.querySelector('.duration-button.active');
+    if (defaultActiveButton) {
+        const defaultMonths = parseInt(defaultActiveButton.dataset.months);
+        renderCalendars(defaultMonths);
+    } else {
+        renderCalendars(6); // Fallback to 6 months if no active button
+    }
+
     // Corrected selector: Use the class 'generate-payment-link-btn' from the HTML
     const generateButton = document.querySelector('.generate-payment-link-btn');
 
@@ -79,4 +87,111 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
+});
+
+const calendarContainer = document.getElementById('calendarContainer');
+const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+// Data for highlights
+// Storing dates as 'YYYY-MM-DD' for easy comparison
+const highlightedDates = {
+    '2025-07-01': 'blue',
+    '2025-07-02': 'blue',
+    '2025-07-03': 'blue',
+    '2025-07-04': 'blue',
+    '2025-07-05': 'blue',
+    '2025-08-24': 'red',
+    '2025-09-26': 'red',
+    '2025-09-27': 'red',
+};
+
+function getDaysInMonth(year, month) {
+    return new Date(year, month + 1, 0).getDate();
+}
+
+function getFirstDayOfMonth(year, month) {
+    return new Date(year, month, 1).getDay();
+}
+
+function createCalendarCard(year, month) {
+    const card = document.createElement('div');
+    card.classList.add('calendar-card');
+
+    const monthHeader = document.createElement('div');
+    monthHeader.classList.add('month-header');
+    monthHeader.textContent = `${months[month]} ${year}`;
+    card.appendChild(monthHeader);
+
+    const weekdaysDiv = document.createElement('div');
+    weekdaysDiv.classList.add('weekdays');
+    weekdays.forEach(day => {
+        const dayName = document.createElement('div');
+        dayName.textContent = day;
+        weekdaysDiv.appendChild(dayName);
+    });
+    card.appendChild(weekdaysDiv);
+
+    const daysGrid = document.createElement('div');
+    daysGrid.classList.add('days-grid');
+
+    const firstDayIndex = getFirstDayOfMonth(year, month);
+    const daysInMonth = getDaysInMonth(year, month);
+
+    // Add empty cells for days before the 1st
+    for (let i = 0; i < firstDayIndex; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.classList.add('day-cell', 'empty');
+        daysGrid.appendChild(emptyCell);
+    }
+
+    // Add day cells
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dayCell = document.createElement('div');
+        dayCell.classList.add('day-cell');
+        dayCell.textContent = String(day).padStart(2, '0');
+
+        const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        if (highlightedDates[dateString]) {
+            dayCell.classList.add(`highlight-${highlightedDates[dateString]}`);
+        }
+
+        dayCell.addEventListener('click', () => {
+            console.log(`Clicked on: ${dateString}`);
+        });
+
+        daysGrid.appendChild(dayCell);
+    }
+
+    card.appendChild(daysGrid);
+    return card;
+}
+
+function renderCalendars(numberOfMonths) {
+    calendarContainer.innerHTML = '';
+
+    // Fixed start date based on the image's July 2025 calendar
+    let currentYear = 2025;
+    let currentMonth = 6;
+
+    for (let i = 0; i < numberOfMonths; i++) {
+        calendarContainer.appendChild(createCalendarCard(currentYear, currentMonth));
+
+        currentMonth++;
+        if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        }
+    }
+}
+
+// Duration buttons
+document.querySelectorAll('.duration-button').forEach(button => {
+    button.addEventListener('click', function() {
+        document.querySelectorAll('.duration-button').forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+
+        const monthsToShow = parseInt(this.dataset.months);
+        renderCalendars(monthsToShow);
+    });
 });
